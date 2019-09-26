@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+mypy = "*"
+pep8 = "*"
+pylint = "*"
+
+[packages]
+flask = "*"
+intake = {extras = ["complete"], version = "*"}
+flask-bootstrap4 = "*"
+flask-wtf = "*"
+markdown = "*"
+
+[requires]
+python_version = "3.7"

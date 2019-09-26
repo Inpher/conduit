@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+    <h1 class="display-4">Conduit</h1>
+    <p class="lead">Select an existing datasource definition or use the buttons bellow to create or import new definitions.</p>
+    <p>
+        <button type="button" class="btn btn-outline-primary disabled">Create</button>
+        <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#importDefinition">Import</button>
+    </p>
+    <!-- Modal -->
+    <form method="post" enctype="multipart/form-data">
+        <div class="modal fade" id="importDefinition" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="importDefinitionLabel">Upload datasource definition</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <input type="file" class="form-control-file" name="file">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                        <input type="submit" class="btn btn-outline-primary" value="Import">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="container">
+    <div class="card-deck mb-3 text-center">
+        <div class="row">
+            {% for ds in datasources %}
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>{{ ds['name'] }}</h4>
+                        <h6 class="text-muted">{{ ', '.join(ds['plugin']) }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ ds['description']|parse_markdown|safe }}</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href={{ url_for('run', source=ds['name']) }} class="btn btn-outline-primary">Run</a>
+                        <a href="#" class="btn btn-outline-secondary">Edit</a>
+                        <a href={{ url_for('delete', source=ds['name']) }} class="btn btn-outline-danger">Delete</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
