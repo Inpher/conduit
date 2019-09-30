@@ -1,3 +1,6 @@
+import os
+import os.path
+
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_bootstrap import Bootstrap
 from intake import open_catalog
@@ -5,12 +8,12 @@ from markdown import markdown
 from werkzeug.utils import secure_filename
 
 CATALOGS_FOLDER = 'catalogs'
-ALLOWED_EXTENSIONS = {'yml', 'yaml'}
-#PRIVATEDATA_FOLDER = '/opt/inpher/xor/privatedata/'
-PRIVATEDATA_FOLDER = 'privatedata/'
+ALLOWED_CAT_EXT = {'yml', 'yaml'}
+XOR_FOLDER = '/opt/inpher/xor' if os.path.exists('/opt/inpher/xor') else '/xor'
+PRIVATEDATA_FOLDER = XOR_FOLDER + '/privatedata/'
 
 app = Flask(__name__)
-app.secret_key = 'QLRx45qVaN'
+app.secret_key = b'*Qm6^wScTHguwPH_'
 app.config['CATALOGS_FOLDER'] = CATALOGS_FOLDER
 app.config['PRIVATEDATA_FOLDER'] = PRIVATEDATA_FOLDER
 
@@ -34,7 +37,7 @@ def index():
             file.save(os.path.join(app.config['CATALOGS_FOLDER'], filename))
             flash('Datasource file imported', 'alert-success')
             return redirect(url_for('index'))
-    # list Intake catalogs
+    # update catalogs list
     catalogs = open_catalog(CATALOGS_FOLDER)
     datasources = [v.describe() for _, v in catalogs.items()]
     return render_template('index.html', datasources=datasources)
@@ -49,20 +52,28 @@ def run(source):
         data = catalogs[source].read()
         filename = source + '.csv'
         data.to_csv(os.path.join(app.config['PRIVATEDATA_FOLDER'], filename))
-        flash('Saved datasource', 'alert-success')
-    except:
-        flash('Unable to save datasource', 'alert-danger')
+        flash('Added data file to XOR Machine', 'alert-success')
+    except Exception as e:
+        app.logger.exception(e)
+        flash('Unable to create data file', 'alert-danger')
     return redirect(url_for('index'))
 
 @app.route('/delete/<source>')
 def delete(source):
     try:
-        filename = source + '.csv'
+        # check if we were given the filename or the catalog name
+        filename = source if os.path.splitext(source)[1] else source + '.csv'
         os.remove(os.path.join(app.config['PRIVATEDATA_FOLDER'], filename))
-        flash('Deleted datasource', 'alert-warning')
-    except:
-        flash('Unable to delete datasource', 'alert-danger')
-    return redirect(url_for('index'))
+        flash('Deleted data file from XOR Machine', 'alert-warning')
+    except Exception as e:
+        app.logger.exception(e)
+        flash('Unable to delete data file', 'alert-danger')
+    return redirect(request.referrer)
+
+@app.route('/browse')
+def browse():
+    files = os.listdir(PRIVATEDATA_FOLDER)
+    return render_template('browse.html', files=files)
 
 @app.template_filter('parse_markdown')
 def parse_markdown(text):
@@ -70,11 +81,12 @@ def parse_markdown(text):
 
 def _allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_CAT_EXT
 
 if __name__ == "__main__":
     import os
 
     if 'WINGDB_ACTIVE' in os.environ:
         app.debug = False
+
     app.run()

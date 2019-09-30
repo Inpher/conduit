@@ -10,10 +10,11 @@ pylint = "*"
 
 [packages]
 flask = "*"
-intake = {extras = ["complete"], version = "*"}
+intake = {extras = ["complete"],version = "*"}
 flask-bootstrap4 = "*"
 flask-wtf = "*"
 markdown = "*"
+uwsgi = "*"
 
 [requires]
 python_version = "3.7"
